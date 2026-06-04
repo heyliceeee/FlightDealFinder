@@ -4,6 +4,7 @@ import requests_cache
 from datetime import datetime, timedelta
 from flight_search import FlightSearch
 from flight_data import find_cheapest_flight
+from notification_manager import NotificationManager
 
 requests_cache.install_cache(
     "flight_cache",
@@ -20,18 +21,47 @@ data_manager = DataManager()
 sheet_data = data_manager.get_destination_data() # get data from a sheet
 
 tomorrow = datetime.now() + timedelta(days=1) # get tomorrow's date
-six_months_from_today = datetime.now() + timedelta(days=(6 * 30)) # get 6 months from today
+one_month_from_today = datetime.now() + timedelta(days=(1 * 30)) # get 1 month from today
 
 flight_search = FlightSearch()
+notification_manager = NotificationManager()
 
-# Search all the cities
-for destination in sheet_data: # loop through all the cities
-    pprint(f"Getting flights for {destination['city']}...")
-    flights = flight_search.check_flights(ORIGIN_CITY_IATA, destination["iataCode"], tomorrow, six_months_from_today) # get flights for the city
 
-    cheapest_flight = find_cheapest_flight(flights, six_months_from_today.strftime("%Y-%m-%d")) # get the cheapest flight
-    pprint(f"{destination['city']}: {cheapest_flight.price}€")
+for destination in sheet_data: # loop through all the destinations
+    pprint(f"Searching best price for {destination['city']}...")
 
-    if cheapest_flight.price != "N/A" and cheapest_flight.price < destination["lowestPrice"]: # check if the price is lower than the lowest price in the sheet
-        pprint(f"Lower price flight found to {destination['city']}!")
-        data_manager.update_lowest_price(destination["id"], cheapest_flight.price) # update the lowest price in the sheet
+    search_start = tomorrow # start searching from tomorrow
+    search_end = one_month_from_today # end searching 1 month from today
+
+    current_date = search_start # current date
+    best_flight = None # best flight
+
+    while current_date <= search_end: # loop through the dates
+        flights = flight_search.check_flights(ORIGIN_CITY_IATA, destination["iataCode"], current_date, current_date + timedelta(days=3)) # search for flights
+
+        flight = find_cheapest_flight(flights) # find the cheapest flight
+
+        if flight.price != "N/A": # check if the price is not "N/A"
+            if best_flight is None or flight.price < best_flight.price: # check if this flight is the best
+                best_flight = flight # update the best flight
+
+        current_date += timedelta(days=1) # move to the next date
+
+    if best_flight is None: # check if there are no flights
+        pprint(f"No flights found for {destination['city']}.")
+        continue
+
+    pprint(f"Cheapest flight to {destination['city']}: {best_flight.price}€")
+
+    if best_flight.price < destination["lowestPrice"]: # check if the price is lower than the current lowest price
+        pprint(f"Lower price found for {destination['city']}!")
+        data_manager.update_lowest_price(destination["id"], best_flight.price) # update the lowest price
+
+        text = (
+            f"🔥 *Lower Price Alert!* 🔥\n"
+            f"✈️ Only *{best_flight.price}€* to fly from "
+            f"*{ORIGIN_CITY_IATA} → {destination['iataCode']}*\n"
+            f"📅 On *{best_flight.out_date}*"
+        )
+
+        notification_manager.send_telegram_message(text) # send a notification to Telegram

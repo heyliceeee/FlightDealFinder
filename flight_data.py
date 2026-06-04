@@ -1,26 +1,23 @@
 from datetime import datetime, timedelta
 
 class FlightData:
-    def __init__(self, price, origin_airport, destination_airport, out_date, return_date):
+    def __init__(self, price, origin_airport, destination_airport, out_date):
         """
         this class is responsible for storing the flight data
         :param price: Price of the flight
         :param origin_airport: Origin airport
         :param destination_airport: Destination airport
         :param out_date: Outbound date
-        :param return_date: Return date
         """
         self.price = price
         self.origin_airport = origin_airport
         self.destination_airport = destination_airport
         self.out_date = out_date
-        self.return_date = return_date
 
-def find_cheapest_flight(data, return_date):
+def find_cheapest_flight(data):
     """
     Find the cheapest flight
     :param data: Data from the API
-    :param return_date: Return date
     :return: flight data
     """
     if data is None or (not data.get("best_flights") and not data.get("other_flights")): # check if there are flights
@@ -35,7 +32,7 @@ def find_cheapest_flight(data, return_date):
     destination = first_flight["flights"][-1]["arrival_airport"]["id"] # get the destination airport
     out_date = first_flight["flights"][0]["departure_airport"]["time"].split(" ")[0] # get the outbound date
 
-    cheapest_flight = FlightData(lowest_price, origin, destination, out_date, return_date) # create a new FlightData object
+    cheapest_flight = FlightData(lowest_price, origin, destination, out_date) # create a new FlightData object
 
     for flight in all_flights: # loop through all the flights
         try:
@@ -48,7 +45,7 @@ def find_cheapest_flight(data, return_date):
             origin = flight["flights"][0]["departure_airport"]["id"] # update the origin airport
             destination = flight["flights"][-1]["arrival_airport"]["id"] # update the destination airport
             out_date = flight["flights"][0]["departure_airport"]["time"].split(" ")[0] # update the outbound date
-            cheapest_flight = FlightData(lowest_price, origin, destination, out_date, return_date) # update the FlightData object
+            cheapest_flight = FlightData(lowest_price, origin, destination, out_date) # update the FlightData object
             print(f"Lowest price to {destination} is {lowest_price}€")
 
     return cheapest_flight
