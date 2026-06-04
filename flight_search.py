@@ -18,7 +18,7 @@ class FlightSearch:
         :param to_time: to time
         :return: flight data
         """
-        endpoint = os.getenv("BASE_URL_SERP_API")
+        endpoint = os.getenv("BASE_URL_SERP_API") # get the url of the API
         params = {
             "engine": "google_flights",
             "departure_id": origin_city_code,
@@ -29,15 +29,15 @@ class FlightSearch:
             "currency": "EUR",
             "hl": "en",
             "api_key": self._api_key,
-        }
+        } # get the parameters
 
-        response = requests.get(url=endpoint, params=params)
-        if response.status_code != 200:
+        response = requests.get(url=endpoint, params=params) # get the data from the API
+        if response.status_code != 200: # check if the response is OK
             print(f"check_flights() response code: {response.status_code}")
             return None
 
-        data = response.json()
-        if "error" in data:
+        data = response.json() # get the data in JSON format
+        if "error" in data: # check if there is an error
             print(f"API error: {data['error']}")
             return None
         return data

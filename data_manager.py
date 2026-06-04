@@ -23,3 +23,18 @@ class DataManager:
         data = response.json() # get the data in JSON format
         self.destination_data = data["prices"] # save the data in a dictionary
         return self.destination_data
+
+    def update_lowest_price(self, row_id, new_price):
+        """
+        Update the lowest price
+        :param row_id: Row ID
+        :param new_price: New price
+        :return: status code
+        """
+        new_data = {
+            "price": {
+                "lowestPrice": new_price
+            }
+        }
+        response = requests.put(url=f"{SHEETY_PRICES_ENDPOINT}/{row_id}", headers=self._authorization, json=new_data)
+        return response.status_code
