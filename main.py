@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from flight_search import FlightSearch
 from flight_data import find_cheapest_flight
 from notification_manager import NotificationManager
+import time
 
 requests_cache.install_cache("flight_cache", urls_expire_after={
         "*.sheety.co*": requests_cache.DO_NOT_CACHE,
@@ -34,17 +35,12 @@ for destination in sheet_data: # loop through all the destinations
     best_flight = None # best flight
 
     while current_date <= search_end: # loop through the dates
-        direct_data = flight_search.check_flights(ORIGIN_CITY_IATA, destination["iataCode"], current_date, current_date + timedelta(days=3), is_direct=True) # search for direct flights
-        #flights = flight_search.check_flights(ORIGIN_CITY_IATA, destination["iataCode"], current_date, current_date + timedelta(days=3)) # search for flights
+        data = flight_search.check_flights(ORIGIN_CITY_IATA, destination["iataCode"], current_date) # search for flights
+        time.sleep(1) # sleep for 1 second
 
-        flight = find_cheapest_flight(direct_data) # find the cheapest direct flight
+        flight = find_cheapest_flight(data) # find the cheapest direct flight
 
-        if flight.price == "N/A": # if no there exists a direct flight
-            pprint(f"No direct flight on {current_date.date()} → checking indirect flights...")
-            indirect_data = flight_search.check_flights(ORIGIN_CITY_IATA, destination["iataCode"], current_date, current_date + timedelta(days=3), is_direct=False) # search for indirect flights
-            flight = find_cheapest_flight(indirect_data) # find the cheapest indirect flight
-
-        if flight.price != "N/A": # if found a flight (direct or indirect)
+        if flight.price != "N/A": # if found a flight
             if best_flight is None or flight.price < best_flight.price: # check if this flight is the best
                 best_flight = flight # update the best flight
 
@@ -54,7 +50,11 @@ for destination in sheet_data: # loop through all the destinations
         pprint(f"No flights found for {destination['city']}.")
         continue
 
-    pprint(f"Cheapest flight to {destination['city']}: {best_flight.price}€ | {best_flight.stops} stops | {best_flight.out_date}")
+    route_str = " → ".join(best_flight.route)
+    pprint(
+        f"Cheapest flight to {destination['city']}: "
+        f"{best_flight.price}€ | {best_flight.out_date} | Route: {route_str}"
+    )
 
     if best_flight.price < destination["lowestPrice"]: # check if the price is lower than the current lowest price
         pprint(f"Lower price found for {destination['city']}!")
@@ -65,7 +65,7 @@ for destination in sheet_data: # loop through all the destinations
             f"✈️ Only *{best_flight.price}€* to fly from "
             f"*{ORIGIN_CITY_IATA} → {destination['iataCode']}*\n"
             f"📅 On *{best_flight.out_date}*\n"
-            f"🔁 Stops: *{best_flight.stops}*"
+            f"🛫 Route: *{route_str}*"
         )
 
         notification_manager.send_telegram_message(text) # send a notification to Telegram

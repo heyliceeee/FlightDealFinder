@@ -1,19 +1,18 @@
-
 class FlightData:
-    def __init__(self, price, origin_airport, destination_airport, out_date, stops):
+    def __init__(self, price, origin_airport, destination_airport, out_date, route):
         """
         this class is responsible for storing the flight data
         :param price: Price of the flight
         :param origin_airport: Origin airport
         :param destination_airport: Destination airport
         :param out_date: Outbound date
-        :param stops: Stops in the flight
+        :param route: Route of the flight
         """
         self.price = price
         self.origin_airport = origin_airport
         self.destination_airport = destination_airport
         self.out_date = out_date
-        self.stops = stops
+        self.route = route
 
 def find_cheapest_flight(data):
     """
@@ -23,7 +22,7 @@ def find_cheapest_flight(data):
     """
     if data is None or (not data.get("best_flights") and not data.get("other_flights")): # check if there are flights
         print("No flights found.")
-        return FlightData("N/A", "N/A", "N/A", "N/A", "N/A") # return None
+        return FlightData("N/A", "N/A", "N/A", "N/A", []) # return None
 
     all_flights = data.get("best_flights", []) + data.get("other_flights", []) # get all the flights
 
@@ -32,9 +31,17 @@ def find_cheapest_flight(data):
     origin = first_flight["flights"][0]["departure_airport"]["id"] # get the origin airport
     destination = first_flight["flights"][-1]["arrival_airport"]["id"] # get the destination airport
     out_date = first_flight["flights"][0]["departure_airport"]["time"].split(" ")[0] # get the outbound date
-    stops = len(first_flight["flights"]) - 1  # get the number of stops
 
-    cheapest_flight = FlightData(lowest_price, origin, destination, out_date, stops) # create a new FlightData object
+    route = []
+    for segment in first_flight["flights"]: # get the route
+        dep = segment["departure_airport"]["id"] # get the departure airport
+        arr = segment["arrival_airport"]["id"] # get the arrival airport
+
+        if not route: # check if the route is empty
+            route.append(dep) # add the departure airport to the route
+        route.append(arr) # add the arrival airport to the route
+
+    cheapest_flight = FlightData(lowest_price, origin, destination, out_date, route) # create a new FlightData object
 
     for flight in all_flights: # loop through all the flights
         try:
@@ -47,9 +54,17 @@ def find_cheapest_flight(data):
             origin = flight["flights"][0]["departure_airport"]["id"] # update the origin airport
             destination = flight["flights"][-1]["arrival_airport"]["id"] # update the destination airport
             out_date = flight["flights"][0]["departure_airport"]["time"].split(" ")[0] # update the outbound date
-            stops = len(flight["flights"]) - 1 # update the number of stops
 
-            cheapest_flight = FlightData(lowest_price, origin, destination, out_date, stops) # update the FlightData object
+            route = []
+            for segment in flight["flights"]: # update the route
+                dep = segment["departure_airport"]["id"] # get the departure airport
+                arr = segment["arrival_airport"]["id"] # get the arrival airport
+
+                if not route: # check if the route is empty
+                    route.append(dep) # add the departure airport to the route
+                route.append(arr) # add the arrival airport to the route
+
+            cheapest_flight = FlightData(lowest_price, origin, destination, out_date, route) # update the FlightData object
             print(f"Lowest price to {destination} is {lowest_price}€")
 
     return cheapest_flight
