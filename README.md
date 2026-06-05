@@ -1,56 +1,66 @@
 # ✈️ Flight Price Tracker
 
-Monitorização automática de preços de voos com alertas inteligentes sempre que surgem tarifas mais baixas para destinos definidos. O sistema analisa múltiplas datas de partida dentro de um intervalo configurado e identifica a melhor oportunidade disponível.
+Sistema automatizado que monitoriza preços de voos e identifica oportunidades reais de viagem. Analisa múltiplas datas de partida, encontra a tarifa mais baixa disponível e envia alertas personalizados aos utilizadores.
 
 ## 📌 Visão Geral
 
-O projeto permite acompanhar preços de voos de forma contínua, evitando verificações manuais e garantindo que o utilizador é notificado quando aparece uma oferta mais vantajosa. A lógica baseia‑se em três pilares: recolha de destinos, pesquisa de voos e envio de alertas.
+O projeto acompanha preços de voos de forma contínua, cruzando dados de uma folha remota com pesquisas diárias. Sempre que surge uma tarifa inferior ao valor registado, o sistema atualiza o preço e notifica todos os clientes subscritos.
 
 ## 🗂️ Gestão de Destinos
 
-Os destinos monitorizados são obtidos a partir de uma folha remota. Cada entrada inclui:
+Os destinos são obtidos a partir de uma folha remota que contém:
 - cidade  
 - código IATA  
 - preço mínimo registado  
 
-Sempre que é encontrada uma tarifa inferior, o valor é atualizado automaticamente.
+Quando é encontrada uma tarifa mais baixa, o valor é atualizado automaticamente.
 
 ## 🔍 Pesquisa de Voos
 
-O sistema consulta um serviço externo para obter voos disponíveis entre duas datas. Para cada destino, são analisadas várias datas de partida dentro do intervalo definido, permitindo identificar a opção mais económica.
+O sistema consulta um serviço externo para obter voos só de ida. Para cada destino, analisa um intervalo de datas e recolhe:
+- preço  
+- número de escalas  
+- rota completa (aeroportos de partida, escala e chegada)  
+- data do voo  
+
+Todos os voos diretos e com escalas são considerados, sendo selecionada sempre a opção mais económica.
 
 ## 🧠 Seleção do Melhor Voo
 
-Entre todas as opções encontradas, o sistema determina:
-- o preço mais baixo  
-- o aeroporto de origem  
-- o aeroporto de destino  
+Entre todas as datas analisadas, o sistema determina:
+- a tarifa mais baixa  
+- a rota completa  
+- o número de escalas  
 - a data de partida  
 
-Esta informação é consolidada num objeto que representa o voo mais barato encontrado no período analisado.
+Esta informação é encapsulada num objeto que representa o melhor voo encontrado.
 
 ## 📢 Notificações
 
-Quando é detetada uma tarifa inferior ao valor registado, o utilizador recebe uma notificação automática com:
-- destino  
-- novo preço  
-- rota  
-- data de partida  
+Quando é detetada uma tarifa inferior ao valor registado:
+- o preço é atualizado na folha remota  
+- todos os clientes recebem um alerta por email  
+- o utilizador principal recebe também uma notificação via Telegram  
 
-As notificações são enviadas através de um canal previamente configurado.
+As mensagens incluem:
+- preço  
+- rota  
+- data  
+- indicação se o voo é direto ou com escalas  
 
 ## 🔄 Fluxo de Funcionamento
 
-1. Obter lista de destinos e preços atuais.  
+1. Obter destinos e preços atuais.  
 2. Pesquisar voos ao longo do intervalo definido.  
-3. Identificar o voo mais barato encontrado.  
+3. Identificar o voo mais barato.  
 4. Comparar com o preço registado.  
 5. Atualizar o valor caso seja inferior.  
-6. Enviar alerta ao utilizador.
+6. Enviar alertas por email e Telegram.
 
 ## 🎯 Benefícios
 
 - Monitorização contínua e automática.  
 - Alertas imediatos quando surgem oportunidades reais.  
-- Comparação eficiente entre múltiplas datas.  
-- Redução significativa do tempo gasto a procurar voos. 
+- Rota completa incluída em cada alerta.  
+- Notificações enviadas a todos os clientes subscritos.  
+- Redução significativa do tempo gasto a procurar voos.

@@ -24,6 +24,8 @@ one_month_from_today = datetime.now() + timedelta(days=(1 * 30)) # get 1 month f
 flight_search = FlightSearch()
 notification_manager = NotificationManager()
 
+customer_data = data_manager.get_customer_emails() # get customer emails
+customer_emails = [row["whatIsYourEmail?"] for row in customer_data] # get emails from the data
 
 for destination in sheet_data: # loop through all the destinations
     pprint(f"Searching best price for {destination['city']}...")
@@ -60,7 +62,7 @@ for destination in sheet_data: # loop through all the destinations
         pprint(f"Lower price found for {destination['city']}!")
         data_manager.update_lowest_price(destination["id"], best_flight.price) # update the lowest price
 
-        text = (
+        text_telegram = (
             f"🔥 *Lower Price Alert!* 🔥\n"
             f"✈️ Only *{best_flight.price}€* to fly from "
             f"*{ORIGIN_CITY_IATA} → {destination['iataCode']}*\n"
@@ -68,4 +70,12 @@ for destination in sheet_data: # loop through all the destinations
             f"🛫 Route: *{route_str}*"
         )
 
-        notification_manager.send_telegram_message(text) # send a notification to Telegram
+        text_email = (
+            f"✈Only *{best_flight.price}€* to fly from "
+            f"*{ORIGIN_CITY_IATA} → {destination['iataCode']}*\n"
+            f"On *{best_flight.out_date}*\n"
+            f"Route: *{route_str}*"
+        )
+
+        notification_manager.send_telegram_message(text_telegram) # send a notification to Telegram
+        notification_manager.send_email(customer_emails, text_email) # send a notification to email
